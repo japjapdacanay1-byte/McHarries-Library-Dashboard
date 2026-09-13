@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>McHarries Library Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: Arial, sans-serif; background: #0b1220; color: #e5e7eb; }
+        .custom-navbar { height: 65px; background: #111c31; border-bottom: 1px solid #263653; box-shadow: 0 3px 15px rgba(0,0,0,0.35); }
+        .navbar-brand { font-size: 22px; color: #fff !important; }
+        .sidebar { position: fixed; left: 0; top: 65px; bottom: 0; width: 230px; background: #111c31; border-right: 1px solid #263653; padding: 25px 15px; }
+        .sidebar-title { font-size: 13px; font-weight: bold; color: #7f8da6; margin-bottom: 15px; padding-left: 12px; }
+        .sidebar button { display: block; width: 100%; padding: 13px 15px; margin-bottom: 8px; border: none; background: transparent; border-radius: 8px; text-align: left; font-size: 15px; color: #cbd5e1; cursor: pointer; }
+        .sidebar button:hover { background: #1d3557; color: #60a5fa; }
+        .main-content { margin-left: 230px; padding: 95px 35px 40px; min-height: 100vh; background: #0b1220; }
+        .page-title { margin-bottom: 25px; }
+        .page-title h1 { font-size: 32px; color: #f8fafc; margin-bottom: 5px; }
+        .page-title p { color: #94a3b8; }
+        .stat-card { background: #111c31; border: 1px solid #263653; border-radius: 14px; padding: 22px; display: flex; align-items: center; gap: 18px; border-left: 5px solid; }
+        .stat-card.blue { border-color: #3b82f6; }
+        .stat-card.green { border-color: #22c55e; }
+        .stat-card.orange { border-color: #f59e0b; }
+        .stat-card.purple { border-color: #a855f7; }
+        .stat-icon { font-size: 35px; }
+        .stat-card h6 { color: #94a3b8; margin: 0; }
+        .stat-card h2 { color: #f8fafc; margin: 0; }
+        .section-title { font-size: 23px; color: #f8fafc; margin: 30px 0 15px; }
+        .chart-card { background: #111c31; border: 1px solid #263653; border-radius: 14px; padding: 20px; margin-bottom: 20px; }
+        .chart-container { position: relative; height: 300px; }
+        .chart-container.large { height: 380px; }
+        .alert-box { background: #2a2110; border: 1px solid #7c5b16; border-left: 5px solid #f59e0b; padding: 18px; border-radius: 10px; margin-bottom: 20px; }
+        .filter-card { background: #111c31; border: 1px solid #263653; border-radius: 14px; padding: 20px; margin-bottom: 20px; }
+        .filter-card label { color: #cbd5e1; font-weight: bold; }
+        .form-control, .form-select { background: #0b1220 !important; border: 1px solid #334155 !important; color: #e5e7eb !important; }
+        .form-control:focus, .form-select:focus { background: #0f172a !important; color: #fff !important; border-color: #3b82f6 !important; }
+        .table-card { background: #111c31; border: 1px solid #263653; border-radius: 14px; padding: 20px; }
+        .table { color: #dbeafe !important; }
+        .table thead { background: #1d3557; color: #fff; }
+        .table tbody td { border-color: #263653 !important; }
+        .result-count { color: #64748b; margin-top: 10px; }
+        .status-badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+        .status-good { background: #12351f; color: #4ade80; }
+        .status-low { background: #3b2b0b; color: #fbbf24; }
+        .status-out { background: #3b1515; color: #f87171; }
+        .report-card, .settings-card { background: #111c31; border: 1px solid #263653; border-radius: 14px; padding: 30px; max-width: 700px; }
+        .report-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #263653; color: #cbd5e1; }
+        .hidden-section { display: none; }
+        .btn-primary { background: #2563eb; border-color: #2563eb; }
+        .btn-success { background: #16a34a; border-color: #16a34a; }
+        .btn-secondary { background: #475569; border-color: #475569; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-dark custom-navbar fixed-top">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" href="#">📚 McHarries Library</a>
+        <div class="d-flex align-items-center gap-3">
+            <span class="text-white">Welcome, <b id="currentUser">Admin</b></span>
+            <button class="btn btn-light btn-sm" onclick="logout()">Logout</button>
+        </div>
+    </div>
+</nav>
+
+<div class="sidebar">
+    <div class="sidebar-title">MENU</div>
+    <button onclick="showSection('dashboardSection')">📊 Dashboard</button>
+    <button onclick="showSection('booksSection')">📚 Books</button>
+    <button onclick="showSection('reportsSection')">📈 Reports</button>
+    <button onclick="showSection('alertsSection')">⚠️ Alerts</button>
+    <button onclick="showSection('settingsSection')">⚙️ Settings</button>
+</div>
+
+<div class="main-content">
+    <section id="dashboardSection" class="content-section">
+        <div class="page-title">
+            <h1>Dashboard</h1>
+            <p>McHarries Library Inventory Management System</p>
+        </div>
+        <div class="row g-4 mb-4">
+            <div class="col-md-6 col-xl-3"><div class="stat-card blue"><div class="stat-icon">📚</div><div><h6>Total Books</h6><h2 id="totalBooks">0</h2></div></div></div>
+            <div class="col-md-6 col-xl-3"><div class="stat-card green"><div class="stat-icon">📦</div><div><h6>Total Quantity</h6><h2 id="totalQuantity">0</h2></div></div></div>
+            <div class="col-md-6 col-xl-3"><div class="stat-card orange"><div class="stat-icon">⚠️</div><div><h6>Low Stock</h6><h2 id="lowStock">0</h2></div></div></div>
+            <div class="col-md-6 col-xl-3"><div class="stat-card purple"><div class="stat-icon">💰</div><div><h6>Inventory Value</h6><h2 id="inventoryValue">₱0</h2></div></div></div>
+        </div>
+        <div id="alertContainer"></div>
+        <div class="section-title">📊 Inventory Analytics</div>
+        <div class="row g-4">
+            <div class="col-lg-6"><div class="chart-card"><h5>Inventory Value by Category</h5><div class="chart-container"><canvas id="categoryValueChart"></canvas></div></div></div>
+            <div class="col-lg-6"><div class="chart-card"><h5>Stock Status</h5><div class="chart-container"><canvas id="stockStatusChart"></canvas></div></div></div>
+            <div class="col-12"><div class="chart-card"><h5>Top Products by Inventory Value</h5><div class="chart-container large"><canvas id="topProductsChart"></canvas></div></div></div>
+        </div>
+    </section>
+
+    <section id="booksSection" class="content-section hidden-section">
+        <div class="page-title"><h1>📚 Books Inventory</h1><p>Manage and search library books.</p></div>
+        <div class="filter-card">
+            <div class="row g-3">
+                <div class="col-md-4"><label>Search</label><input type="text" id="searchInput" class="form-control" placeholder="Search book name or SKU"></div>
+                <div class="col-md-3"><label>Category</label><select id="categoryFilter" class="form-select"><option value="all">All Categories</option></select></div>
+                <div class="col-md-2"><label>Stock</label><select id="stockFilter" class="form-select"><option value="all">All</option><option value="in-stock">In Stock</option><option value="low-stock">Low Stock</option><option value="out-of-stock">Out of Stock</option></select></div>
+                <div class="col-md-3 d-flex align-items-end gap-2"><button class="btn btn-primary" onclick="applyFilters()">🔍 Filter</button><button class="btn btn-secondary" onclick="resetFilters()">Reset</button></div>
+            </div>
+        </div>
+        <div class="d-flex justify-content-between align-items-center mt-4 mb-3"><h5>Inventory List</h5><button class="btn btn-success" onclick="exportCurrentData()">📥 Export CSV</button></div>
+        <div class="table-card">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead><tr><th>SKU</th><th>Book Name</th><th>Category</th><th>Price</th><th>Quantity</th><th>Reorder Level</th><th>Sales</th><th>Status</th></tr></thead>
+                    <tbody id="inventoryTable"></tbody>
+                </table>
+            </div>
+            <div id="resultCount" class="result-count">0 products</div>
+        </div>
+    </section>
+
+    <section id="reportsSection" class="content-section hidden-section">
+        <div class="page-title"><h1>📈 Reports</h1><p>Library inventory summary.</p></div>
+        <div class="report-card">
+            <h4>Inventory Report</h4><p>This report shows the current inventory status.</p>
+            <div class="report-item"><span>Total Books</span><b id="reportBooks">0</b></div>
+            <div class="report-item"><span>Total Quantity</span><b id="reportQuantity">0</b></div>
+            <div class="report-item"><span>Low Stock Items</span><b id="reportLowStock">0</b></div>
+            <div class="report-item"><span>Total Inventory Value</span><b id="reportValue">₱0</b></div>
+            <button class="btn btn-success mt-3" onclick="exportCurrentData()">📥 Download CSV Report</button>
+        </div>
+    </section>
+
+    <section id="alertsSection" class="content-section hidden-section">
+        <div class="page-title"><h1>⚠️ Stock Alerts</h1><p>Books that need restocking.</p></div>
+        <div id="fullAlerts"></div>
+    </section>
+
+    <section id="settingsSection" class="content-section hidden-section">
+        <div class="page-title"><h1>⚙️ Settings</h1><p>System information.</p></div>
+        <div class="settings-card">
+            <h4>McHarries Library</h4><p>Library Management System</p><hr>
+            <p><b>System:</b> Inventory Management Dashboard</p>
+            <p><b>Developer:</b> Mc Harries Dacanay</p>
+            <p><b>Technology:</b> HTML, CSS, JavaScript, Bootstrap, Chart.js</p>
+            <button class="btn btn-primary" onclick="showSystemMessage()">Test System</button>
+            <div id="systemMessage" class="mt-3"></div>
+        </div>
+    </section>
+</div>
+
+<script>
+const products = [
+    { sku: "BOOK-001", name: "Java Programming", category: "Programming", price: 550, quantity: 12, reorderLevel: 5, sales: 8 },
+    { sku: "BOOK-002", name: "Web Development Basics", category: "Web Development", price: 450, quantity: 7, reorderLevel: 5, sales: 10 },
+    { sku: "BOOK-003", name: "Database Management", category: "Database", price: 600, quantity: 4, reorderLevel: 5, sales: 6 },
+    { sku: "BOOK-004", name: "Computer Networking", category: "Networking", price: 500, quantity: 0, reorderLevel: 3, sales: 12 },
+    { sku: "BOOK-005", name: "Information Management", category: "Information Systems", price: 650, quantity: 15, reorderLevel: 5, sales: 9 },
+    { sku: "BOOK-006", name: "JavaScript Essentials", category: "Web Development", price: 520, quantity: 3, reorderLevel: 5, sales: 14 },
+    { sku: "BOOK-007", name: "Python Programming", category: "Programming", price: 580, quantity: 10, reorderLevel: 4, sales: 11 },
+    { sku: "BOOK-008", name: "Network Security", category: "Networking", price: 700, quantity: 2, reorderLevel: 4, sales: 15 }
+];
+
+function getStockStatus(p) {
+    if (p.quantity === 0) return "out-of-stock";
+    if (p.quantity <= p.reorderLevel) return "low-stock";
+    return "in-stock";
+}
+function getLowStockProducts() { return products.filter(p => p.quantity <= p.reorderLevel); }
+function getInventoryValue(p) { return p.price * p.quantity; }
+function getCategorySummary() {
+    const s = {};
+    products.forEach(p => { s[p.category] = (s[p.category] || 0) + getInventoryValue(p); });
+    return s;
+}
+function exportToCSV(data) {
+    let csv = "SKU,Book Name,Category,Price,Quantity,Reorder Level,Sales,Status\n";
+    data.forEach(p => csv += `${p.sku},"${p.name}",${p.category},${p.price},${p.quantity},${p.reorderLevel},${p.sales},${getStockStatus(p)}\n`);
+    const blob = new Blob([csv], {type:"text/csv;charset=utf-8;"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = "McHarries_Library_Inventory.csv"; a.click(); URL.revokeObjectURL(url);
+}
+function searchProducts(data, kw) {
+    if (!kw) return data;
+    kw = kw.toLowerCase();
+    return data.filter(p => p.name.toLowerCase().includes(kw) || p.sku.toLowerCase().includes(kw));
+}
+function filterByCategory(data, cat) { return cat === "all" ? data : data.filter(p => p.category === cat); }
+function filterByStockStatus(data, status) { return status === "all" ? data : data.filter(p => getStockStatus(p) === status); }
+
+let categoryChart, stockChart, productsChart;
+function createCategoryChart() {
+    const s = getCategorySummary();
+    if (categoryChart) categoryChart.destroy();
+    categoryChart = new Chart(document.getElementById("categoryValueChart"), {
+        type: "bar", data: { labels: Object.keys(s), datasets: [{ label: "Inventory Value (₱)", data: Object.values(s) }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+    });
+}
+function createStockChart() {
+    let is=0, ls=0, os=0;
+    products.forEach(p => { const st=getStockStatus(p); if(st==="in-stock")is++; else if(st==="low-stock")ls++; else os++; });
+    if (stockChart) stockChart.destroy();
+    stockChart = new Chart(document.getElementById("stockStatusChart"), {
+        type: "doughnut", data: { labels: ["In Stock","Low Stock","Out of Stock"], datasets: [{ data: [is,ls,os] }] },
+        options: { responsive: true, maintainAspectRatio: false }
+    });
+}
+function createProductsChart() {
+    const top = [...products].sort((a,b)=>getInventoryValue(b)-getInventoryValue(a)).slice(0,6);
+    if (productsChart) productsChart.destroy();
+    productsChart = new Chart(document.getElementById("topProductsChart"), {
+        type: "bar", data: { labels: top.map(p=>p.name), datasets: [{ label: "Inventory Value (₱)", data: top.map(p=>getInventoryValue(p)) }] },
+        options: { indexAxis: "y", responsive: true, maintainAspectRatio: false }
+    });
+}
+function createAllCharts() { createCategoryChart(); createStockChart(); createProductsChart(); }
+
+document.addEventListener("DOMContentLoaded", function() {
+    updateStatistics(); populateCategories(); updateTable(products); updateAlerts(); updateReports(); createAllCharts();
+});
+function showSection(id) {
+    document.querySelectorAll(".content-section").forEach(s => s.classList.add("hidden-section"));
+    document.getElementById(id).classList.remove("hidden-section");
+    if (id === "booksSection") updateTable(products);
+}
+function updateStatistics() {
+    const tb = products.length, tq = products.reduce((s,p)=>s+p.quantity,0), tv = products.reduce((s,p)=>s+getInventoryValue(p),0), ls = getLowStockProducts().length;
+    document.getElementById("totalBooks").textContent = tb;
+    document.getElementById("totalQuantity").textContent = tq;
+    document.getElementById("lowStock").textContent = ls;
+    document.getElementById("inventoryValue").textContent = "₱" + tv.toLocaleString();
+}
+function populateCategories() {
+    const sel = document.getElementById("categoryFilter");
+    [...new Set(products.map(p=>p.category))].forEach(cat=>{const o=document.createElement("option");o.value=cat;o.textContent=cat;sel.appendChild(o);});
+}
+function updateTable(data) {
+    const tb = document.getElementById("inventoryTable"); tb.innerHTML = "";
+    data.forEach(p => {
+        const st = getStockStatus(p), stText = st==="in-stock"?"In Stock":st==="low-stock"?"Low Stock":"Out of Stock", stClass = st==="in-stock"?"status-good":st==="low-stock"?"status-low":"status-out";
+        tb.innerHTML += `<tr><td><b>${p.sku}</b></td><td>${p.name}</td><td>${p.category}</td><td>₱${p.price.toLocaleString()}</td><td><b>${p.quantity}</b></td><td>${p.reorderLevel}</td><td>${p.sales}</td><td><span class="status-badge ${stClass}">${stText}</span></td></tr>`;
+    });
+    document.getElementById("resultCount").textContent = data.length + " products";
+}
+function applyFilters() {
+    let d = searchProducts(products, document.getElementById("searchInput").value);
+    d = filterByCategory(d, document.getElementById("categoryFilter").value);
+    d = filterByStockStatus(d, document.getElementById("stockFilter").value);
+    updateTable(d);
+}
+function resetFilters() {
+    document.getElementById("searchInput").value = "";
+    document.getElementById("categoryFilter").value = "all";
+    document.getElementById("stockFilter").value = "all";
+    updateTable(products);
+}
+function updateAlerts() {
+    const ls = getLowStockProducts(), ac = document.getElementById("alertContainer"), fa = document.getElementById("fullAlerts");
+    if (ls.length === 0) { ac.innerHTML = ""; fa.innerHTML = `<div class="alert alert-success">✅ No low stock books.</div>`; return; }
+    ac.innerHTML = `<div class="alert-box"><h5>⚠️ Low Stock Alert</h5><p>${ls.length} book(s) need restocking.</p><button class="btn btn-warning btn-sm" onclick="showSection('alertsSection')">View Alerts</button></div>`;
+    fa.innerHTML = "";
+    ls.forEach(p => fa.innerHTML += `<div class="alert alert-warning"><b>${p.name}</b><br>SKU: ${p.sku}<br>Current Stock: <b>${p.quantity}</b><br>Reorder Level: <b>${p.reorderLevel}</b></div>`);
+}
+function updateReports() {
+    const tq = products.reduce((s,p)=>s+p.quantity,0), tv = products.reduce((s,p)=>s+getInventoryValue(p),0);
+    document.getElementById("reportBooks").textContent = products.length;
+    document.getElementById("reportQuantity").textContent = tq;
+    document.getElementById("reportLowStock").textContent = getLowStockProducts().length;
+    document.getElementById("reportValue").textContent = "₱" + tv.toLocaleString();
+}
+function exportCurrentData() { exportToCSV(products); }
+function showSystemMessage() { document.getElementById("systemMessage").innerHTML = `<div class="alert alert-success">✅ System is working properly!</div>`; }
+function logout() { localStorage.removeItem("isLoggedIn"); localStorage.removeItem("username"); window.location.href = "index.html"; }
+</script>
+</body>
+</html>
